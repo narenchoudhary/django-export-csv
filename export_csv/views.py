@@ -10,51 +10,89 @@ from django.views.generic import View
 
 
 class ExportCSV(View):
-    """
-    Generic View class which handles exporting queryset to CSV file and
+    """Generic View class which handles exporting queryset to CSV file and
     rendering the response.
-
-    Attributes:
-        :model: optional name of a model. If provided, all objects of the
-        model will for the queryset. If omitted, :get_queryset method must be
-        overridden.
-
-        :fields: an optional list of field names which are retrieved from
-        queryset and written to CSV. If provided, only the named fields will be
-        included in the CSV. If omitted all fields of the model will be used.
-        Fields will be written in the CSV in the order of their occurrence in
-        list.
-
-        :filename: an optional string which forms name of csv returned in the
-        response. If omitted, 'model_list.csv' will be used.
-
-        :add_col_names: Boolean to determine whether to add header row in the
-        CSV or not. Default value if False.
-
-        :col_names: an optional list of strings which forms the header row of
-        the CSV. If omitted, CSV will be created without any header row.
-
-        :content_type: the content_type header of the response. Default value
-        is 'text/csv' and should not be overridden.
-
-        :csv_writer_dialect: dialect argument for csv.writer() method. Default
-        value is 'excel'. It has been added just for sake for completeness.
     """
 
     http_method_names = ['options', 'head', 'get']
     model = None
+    """
+    Name of a model. If provided, all objects of the
+    model will for the queryset. If omitted, :func:`get_queryset` method must
+    be overridden.
+    """
+
     field_names = []
+    """
+    List of ``model`` field names written to CSV. If provided, only those
+    fields will be included in the CSV. If omitted, values return by
+    :func:`get_field_names` is used.
+
+    .. note:: Fields will be written in the CSV in the order of their
+        occurrence in list.
+    """
     filename = None
+    """
+    Name used for CSV file generated. If omitted, filename returned by
+    :func:`get_filename` will be used as default file name.
+    """
+
     add_col_names = False
+    """
+    Set this to ``True`` to add column names (header) to the CSV file. Default
+    value is ``False``.
+    """
+
     col_names = []
+    """
+    Column names to be used for writing the header row in the CSV file. If
+    provided, those column names will be written to header row. If omitted,
+    values returned by :func:``get_col_names`` are used.
+    """
+
     _content_type = 'text/csv'
-    csv_writer_dialect = 'excel'
+    """
+     The content_type header of the response returned by :func:`get`` method.
+     Default value is 'text/csv' and should not be overridden.
+    """
+
+    _csv_writer_dialect = 'excel'
+    """
+    This class uses :func:`csv.writer` to generate CSV. This is the
+    ``dialect`` argument for :func:`csv.writer` method.
+    """
+
+    def __init__(self, field_names=None, filename=None, add_col_names=False,
+                 col_names=None, **kwargs):
+        """Generic View class which handles exporting queryset to CSV file and
+    rendering the response.
+
+        :param field_names: ``field_names``
+        :type field_names: list
+        :param filename: ``filename``
+        :type filename: str
+        :param add_col_names: ``add_col_names``
+        :type add_col_names: bool
+        :param col_names: ``col_names``
+        :type col_names: list
+        :param kwargs: keyword arguments
+        :type kwargs: dict
+        """
+        super(ExportCSV, self).__init__(**kwargs)
+        self.field_names = field_names
+        self.filename = filename
+        self.add_col_names = add_col_names
+        self.col_names = col_names
+        self._content_type = kwargs.pop('_content_type', 'text/csv')
+        self._csv_writer_dialect = kwargs.pop('_csv_writer_dialect', 'excel')
 
     def get_queryset(self):
         """Returns the queryset for generating CSV.
 
         By default, it returns all instances of the Model class referred by
-        model attribute. Override this method to supply custom queryset.
+        ``model`` attribute. Override this method to provide custom queryset.
+
+        :raises: ImproperlyConfigured
         """
         if self.model is not None:
             queryset = self.model.objects.all()
@@ -68,16 +106,18 @@ class ExportCSV(View):
     def get_field_names(self):
         """Returns the fields names to be included in the CSV.
 
-        By default, it returns the field_names attribute of the class. If
-        fields attribute is `None`, it returns names of all the fields of the
-        Model class referred by model attribute.
+        It returns the value of ``field_names`` attribute, if ``field_names``
+        is not empty. Otherwise it returns names of all the fields of the
+        Model class referred by ``model`` attribute.
+
+        :raises: ImproperlyConfigured
         """
         if self.field_names:
             return self.field_names
         if self.model is not None:
             model_fields = self.model._meta.fields
-            fields = [f.name for f in model_fields]
-            return fields
+            self.field_names = [f.name for f in model_fields]
+            return self.field_names
         else:
             raise ImproperlyConfigured(
                 _("No model to get fields form. Either provide a model or "
@@ -85,17 +125,29 @@ class ExportCSV(View):
             )
 
     def _get_field_verbose_names(self):
-        if self.model is None:
-            return None
-        model_fields = self.model._meta.fields
-        verbose_names = [f.verbose_name for f in model_fields]
+        """Returns verbose names of fields returned by :func:`get_field_names`.
+
+        :returns: list
+        """
+        field_names = self.get_field_names()
+        verbose_names = [f.verbose_name for f in self.model._meta.fields
+                         if f.name in field_names]
         return verbose_names
 
     def get_col_names(self):
-        """Returns column names"""
+        """Returns column names to be used for writing header row of the CSV.
+
+        It returns ``col_names``, if ``col_names`` is not an empty list.
+        Otherwise, it returns the verbose names of all the fields.
+        """
         if self.col_names:
-            return self.col_names
-        return None
+            if isinstance(self.col_names, list):
+                return self.col_names
+            else:
+                raise TypeError(
+                    _('col_names must be a list.')
+                )
+        return self._get_field_verbose_names()
 
     def get_filename(self):
         """Returns filename."""
@@ -112,23 +164,22 @@ class ExportCSV(View):
         return self.filename
 
     def get_csv_writer_dialect(self):
-        return self.csv_writer_dialect
+        return self._csv_writer_dialect
 
     def get_csv_writer_kwargs(self, **kwargs):
-        """Returns the kwargs to be passed to csv.writer().
+        """Returns the kwargs to be passed to :func:`csv.writer`.
 
-        Overridden this method to pass keyword arguments to csv.writer().
-        Please keep in mind the string encoding differences between Python2
-        and Python3 when dealing with multiple versions.
-
-        Example:
-        def get_csv_writer_kwargs(self, **kwargs):
-            return dict(quoting=csv.QUOTE_ALL, delimiter=b' ', quotechar=b'|')
+        :param kwargs: kwargs to be passed to :func:`csv.writer`
+        :type kwargs: dict
+        :returns: dict -- kwargs to be passed to :func:`csv.writer`
         """
         return kwargs
 
     def _create_csv(self):
-        """Create CSV and render the response."""
+        """Create CSV and render the response.
+
+        :raises: TypeError
+        """
         response = HttpResponse(content_type=self._content_type)
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             self.get_filename())
@@ -176,5 +227,11 @@ class ExportCSV(View):
         return response
 
     def get(self, request):
-        """Default get method."""
+        """
+        Default get method.
+
+        :param request: request
+        :type request: HttpRequest
+        :returns: HttpResponse
+        """
         return self._create_csv()
