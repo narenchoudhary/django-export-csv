@@ -216,8 +216,9 @@ class ExportCSV(View):
         except TypeError:
             raise TypeError()
 
-        self.col_names = self.get_col_names()
-        if self.add_col_names and self.col_names:
+        # add header column only if self.add_col_names is True
+        if self.add_col_names:
+            self.col_names = self.get_col_names()
             wr.writerow(self.col_names)
 
         queryset = self.get_queryset()
