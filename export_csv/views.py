@@ -2,11 +2,12 @@ from __future__ import unicode_literals
 
 import csv
 
-from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 from django.utils.encoding import force_str, force_text
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import View
+
+from .exceptions import NoModelFoundException
 
 
 class ExportCSV(View):
@@ -58,7 +59,7 @@ class ExportCSV(View):
 
     _csv_writer_dialect = 'excel'
     """
-    This class uses :func:`csv.writer` to generate CSV. This is the
+    View class uses :func:`csv.writer` to generate CSV. This is the
     ``dialect`` argument for :func:`csv.writer` method.
     """
 
@@ -92,15 +93,16 @@ class ExportCSV(View):
         By default, it returns all instances of the Model class referred by
         ``model`` attribute. Override this method to provide custom queryset.
 
-        :raises: ImproperlyConfigured
+        :raises: NoModelFoundException
+
+        :returns: :class:`QuerySet`
         """
         if self.model is not None:
             queryset = self.model.objects.all()
         else:
-            raise ImproperlyConfigured(
-                _("No model to get queryset from. Either provide a model or "
-                    "override get_queryset method.")
-            )
+            exception_msg = "No model to get queryset from. Either provide " \
+                            "a model or override get_queryset method."
+            raise NoModelFoundException(_(exception_msg))
         return queryset
 
     def get_field_names(self):
@@ -110,7 +112,9 @@ class ExportCSV(View):
         is not empty. Otherwise it returns names of all the fields of the
         Model class referred by ``model`` attribute.
 
-        :raises: ImproperlyConfigured
+        :raises: NoModelFoundException
+
+        :returns: list
         """
         if self.field_names:
             return self.field_names
@@ -119,10 +123,9 @@ class ExportCSV(View):
             self.field_names = [f.name for f in model_fields]
             return self.field_names
         else:
-            raise ImproperlyConfigured(
-                _("No model to get fields form. Either provide a model or "
-                  "override get_fields method.")
-            )
+            exception_msg = "No model to get fields form. Either provide a " \
+                            "model or override get_fields method."
+            raise NoModelFoundException(_(exception_msg))
 
     def _get_field_verbose_names(self):
         """Returns verbose names of fields returned by :func:`get_field_names`.
@@ -139,6 +142,10 @@ class ExportCSV(View):
 
         It returns ``col_names``, if ``col_names`` is not an empty list.
         Otherwise, it returns the verbose names of all the fields.
+
+        :raises: TypeError
+
+        :returns: list
         """
         if self.col_names:
             if isinstance(self.col_names, list):
@@ -150,20 +157,33 @@ class ExportCSV(View):
         return self._get_field_verbose_names()
 
     def get_filename(self):
-        """Returns filename."""
+        """Returns filename.
+
+        It returns the filename to be used for rendering CSV. If explicit
+        filename is provided, that filename is returned. If omitted,
+        <model>_list.csv is returned.
+
+        :raises: NoModelFoundException
+
+        :returns: str
+        """
         if self.filename is not None:
             return self.filename
         if self.model is not None:
             model_name = str(self.model.__name__).lower()
             self.filename = force_str(model_name + '_list.csv')
         else:
-            raise ImproperlyConfigured(
-                _("No model to generate filename. Either provide model or "
-                  "filename or override get_filename method.")
-            )
+            exception_msg = "No model to generate filename. Either provide " \
+                            "model or filename or override get_filename " \
+                            "method."
+            raise NoModelFoundException(_(exception_msg))
         return self.filename
 
     def get_csv_writer_dialect(self):
+        """Returns the dialect to be used with :func:`csv.writer`.
+
+        :returns: str
+        """
         return self._csv_writer_dialect
 
     def get_csv_writer_kwargs(self, **kwargs):
@@ -179,6 +199,8 @@ class ExportCSV(View):
         """Create CSV and render the response.
 
         :raises: TypeError
+
+        :returns: :class:`HttpResponse`
         """
         response = HttpResponse(content_type=self._content_type)
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
@@ -191,8 +213,8 @@ class ExportCSV(View):
                 dialect=self.get_csv_writer_dialect(),
                 **self.get_csv_writer_kwargs()
             )
-        except TypeError as e:
-            raise e
+        except TypeError:
+            raise TypeError()
 
         self.col_names = self.get_col_names()
         if self.add_col_names and self.col_names:
