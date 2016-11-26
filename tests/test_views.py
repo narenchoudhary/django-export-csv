@@ -1,5 +1,4 @@
 import mock
-from debug_toolbar.panels import request
 
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
