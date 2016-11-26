@@ -63,30 +63,6 @@ class ExportCSV(View):
     ``dialect`` argument for :func:`csv.writer` method.
     """
 
-    def __init__(self, field_names=None, filename=None, add_col_names=False,
-                 col_names=None, **kwargs):
-        """Generic View class which handles exporting queryset to CSV file and
-    rendering the response.
-
-        :param field_names: ``field_names``
-        :type field_names: list
-        :param filename: ``filename``
-        :type filename: str
-        :param add_col_names: ``add_col_names``
-        :type add_col_names: bool
-        :param col_names: ``col_names``
-        :type col_names: list
-        :param kwargs: keyword arguments
-        :type kwargs: dict
-        """
-        super(ExportCSV, self).__init__(**kwargs)
-        self.field_names = field_names
-        self.filename = filename
-        self.add_col_names = add_col_names
-        self.col_names = col_names
-        self._content_type = kwargs.pop('_content_type', 'text/csv')
-        self._csv_writer_dialect = kwargs.pop('_csv_writer_dialect', 'excel')
-
     def get_queryset(self):
         """Returns the queryset for generating CSV.
 
