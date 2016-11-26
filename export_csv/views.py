@@ -95,12 +95,12 @@ class ExportCSV(View):
         if self.field_names:
             return self.field_names
         if self.model is not None:
-            model_fields = self.model._meta.fields
-            self.field_names = [f.name for f in model_fields]
+            self.field_names = [f.name for f in self.model._meta.fields if
+                                not f.auto_created]
             return self.field_names
         else:
-            exception_msg = "No model to get fields form. Either provide a " \
-                            "model or override get_fields method."
+            exception_msg = "No model to get field names from. Either " \
+                            "provide a model or override get_fields method."
             raise NoModelFoundException(_(exception_msg))
 
     def _get_field_verbose_names(self):
@@ -109,9 +109,13 @@ class ExportCSV(View):
         :returns: list
         """
         field_names = self.get_field_names()
-        verbose_names = [f.verbose_name for f in self.model._meta.fields
-                         if f.name in field_names]
-        return verbose_names
+        if self.model is not None:
+            verbose_names = [f.verbose_name for f in self.model._meta.fields
+                             if f.name in field_names]
+            return verbose_names
+        else:
+            exception_msg = "No model to get verbose field names from."
+            raise NoModelFoundException(_(exception_msg))
 
     def get_col_names(self):
         """Returns column names to be used for writing header row of the CSV.
@@ -127,9 +131,7 @@ class ExportCSV(View):
             if isinstance(self.col_names, list):
                 return self.col_names
             else:
-                raise TypeError(
-                    _('col_names must be a list.')
-                )
+                raise TypeError(_('col_names must be a list.'))
         return self._get_field_verbose_names()
 
     def get_filename(self):
