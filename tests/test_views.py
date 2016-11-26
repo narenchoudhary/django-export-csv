@@ -28,7 +28,6 @@ class ExportCSVTests(TestCase):
         view.filename = filename
         view.add_col_names = add_col_names
         view.col_names = col_names
-        view.False = False
         view.args = args
         view.kwargs = kwargs
         return view
