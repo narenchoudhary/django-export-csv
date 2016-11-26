@@ -33,14 +33,14 @@ class AccountCSV(ExportCSV):
     custom queryset.
     """
     # use this filename for rendering CSV
-    filename = 'account_list.csv'
+    filename = 'rich_account_list.csv'
 
     def get_queryset(self):
         """Write to CSV only those Account instances whose balance is greater
         than 600000."""
         return Account.objects.filter(balance__gt=600000)
 
-    def get_fields(self):
+    def get_field_names(self):
         """Write to CSV only account_no and owner fields."""
         return ['account_no', 'owner']
 
