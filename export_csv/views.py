@@ -23,7 +23,7 @@ class ExportCSV(View):
     be overridden.
     """
 
-    field_names = []
+    field_names = None
     """
     List of ``model`` field names written to CSV. If provided, only those
     fields will be included in the CSV. If omitted, values return by
@@ -44,7 +44,7 @@ class ExportCSV(View):
     value is ``False``.
     """
 
-    col_names = []
+    col_names = None
     """
     Column names to be used for writing the header row in the CSV file. If
     provided, those column names will be written to header row. If omitted,
