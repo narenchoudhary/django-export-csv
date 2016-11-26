@@ -37,7 +37,7 @@ class ExportCSVTests(TestCase):
         view = ExportCSV()
         view = self.setup_view(view, request, model=Customer)
         queryset = view.get_queryset()
-        self.assertEquals(queryset.model, Customer)
+        self.assertEqual(queryset.model, Customer)
 
     def test_get_queryset_exception(self):
         request = RequestFactory().get("")
@@ -51,7 +51,7 @@ class ExportCSVTests(TestCase):
         field_names = ['name', 'address', 'is_active']
         view = self.setup_view(view, request, field_names=field_names)
         returned_field_names = view.get_field_names()
-        self.assertEquals(field_names, returned_field_names)
+        self.assertEqual(field_names, returned_field_names)
 
     def test_get_field_names_model(self):
         request = RequestFactory().get("")
@@ -59,7 +59,7 @@ class ExportCSVTests(TestCase):
         view = self.setup_view(view, request, model=Customer)
         expected_field_names = ['name', 'address', 'is_active', 'last_updated']
         field_names = view.get_field_names()
-        self.assertEquals(set(field_names), set(expected_field_names))
+        self.assertEqual(set(field_names), set(expected_field_names))
 
     def test_get_field_names_exception(self):
         request = RequestFactory().get("")
@@ -77,7 +77,7 @@ class ExportCSVTests(TestCase):
                                field_names=field_names)
         mock_get_field_names.return_value = field_names
         result_verbose_names = view._get_field_verbose_names()
-        self.assertEquals(expected_verbose_names, result_verbose_names)
+        self.assertEqual(expected_verbose_names, result_verbose_names)
 
     @mock.patch('export_csv.views.ExportCSV.get_field_names')
     def test_get_field_verbose_names_model(self, mock_get_field_names):
@@ -89,7 +89,7 @@ class ExportCSVTests(TestCase):
         mock_get_field_names.return_value = ['name', 'address', 'is_active',
                                              'last_updated']
         result_verbose_names = view._get_field_verbose_names()
-        self.assertEquals(set(expected_verbose_names),
+        self.assertEqual(set(expected_verbose_names),
                           set(result_verbose_names))
 
     def test_get_col_names_model(self):
@@ -99,7 +99,7 @@ class ExportCSVTests(TestCase):
                                   'last updated']
         view = self.setup_view(view, request, model=Customer)
         result_col_names = view.get_col_names()
-        self.assertEquals(set(expected_col_names), set(result_col_names))
+        self.assertEqual(set(expected_col_names), set(result_col_names))
 
     def test_get_col_names_custom(self):
         request = RequestFactory().get("")
@@ -109,7 +109,7 @@ class ExportCSVTests(TestCase):
         view = self.setup_view(view, request, model=Customer,
                                col_names=expected_col_names)
         result_col_names = view.get_col_names()
-        self.assertEquals(set(expected_col_names), set(result_col_names))
+        self.assertEqual(set(expected_col_names), set(result_col_names))
 
     def test_get_col_names_exception(self):
         request = RequestFactory().get("")
@@ -123,7 +123,7 @@ class ExportCSVTests(TestCase):
         expected_filename = "custom_filename.csv"
         view = self.setup_view(view, request, filename=expected_filename)
         result_filename = view.get_filename()
-        self.assertEquals(set(expected_filename), set(result_filename))
+        self.assertEqual(set(expected_filename), set(result_filename))
 
     def test_get_filename_model(self):
         request = RequestFactory().get("")
@@ -131,7 +131,7 @@ class ExportCSVTests(TestCase):
         expected_filename = "customer_list.csv"
         view = self.setup_view(view, request, model=Customer)
         result_filename = view.get_filename()
-        self.assertEquals(set(expected_filename), set(result_filename))
+        self.assertEqual(set(expected_filename), set(result_filename))
 
     def test_get_filename_exception(self):
         request = RequestFactory().get("")
@@ -144,8 +144,8 @@ class ExportCSVTests(TestCase):
         view = ExportCSV()
         view = self.setup_view(view, request, model=Customer)
         response = view._create_csv()
-        self.assertEquals(200, response.status_code)
-        self.assertEquals('text/csv', response['Content-Type'])
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/csv', response['Content-Type'])
 
     @mock.patch('export_csv.views.ExportCSV._create_csv')
     def test_get(self, mock_create_csv):
@@ -154,5 +154,5 @@ class ExportCSVTests(TestCase):
         view = self.setup_view(view, request, model=Customer)
         mock_create_csv.return_value= HttpResponse(status=200, content_type='text/csv')
         response = view.get(request=request)
-        self.assertEquals(200, response.status_code)
-        self.assertEquals('text/csv', response['Content-Type'])
+        self.assertEqual(200, response.status_code)
+        self.assertEqual('text/csv', response['Content-Type'])
