@@ -1,6 +1,22 @@
 django-export-csv
 =================
 
+.. image:: https://travis-ci.org/narenchoudhary/django-export-csv.svg?branch=master
+    :target: https://travis-ci.org/narenchoudhary/django-export-csv
+    :alt: CI status
+
+.. image:: https://codecov.io/gh/narenchoudhary/django-export-csv/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/narenchoudhary/django-export-csv
+    :alt: Coverage Status
+
+.. image:: https://requires.io/github/narenchoudhary/django-export-csv/requirements.svg?branch=master
+     :target: https://requires.io/github/narenchoudhary/django-export-csv/requirements/?branch=master
+     :alt: Requirements Status
+
+.. image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
+    :target: https://opensource.org/licenses/BSD-3-Clause
+    :alt: License Status
+
 ``django-export-csv`` is a reusable Django application for which provides generic views for downloading CSV files.
 
 
