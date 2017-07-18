@@ -3,15 +3,15 @@ from setuptools import find_packages, setup
 import export_csv
 
 try:
-    readme = open('README.md').read()
+    readme = open('README.rst').read()
 except IOError:
     readme = ''
 
 setup(
-    name='django-export-csv',
+    name='django-csv-export',
     version='.'.join(str(i) for i in export_csv.VERSION),
     description='django-export-csv is a reusable Django application which '
-                'provides generic View class for creating and redering CSV.',
+                'provides generic View class for creating and rendering CSV.',
     long_description=readme,
     packages=find_packages(exclude=('tests', 'docs', 'example', )),
     author='Narendra Choudhary',
