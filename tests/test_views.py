@@ -1,4 +1,7 @@
-import mock
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
