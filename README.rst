@@ -27,7 +27,7 @@ To get started using ``django-export-csv`` simply install it with
 
 .. code-block:: python
 
-    pip install git+https://github.com/narenchoudhary/django-export-csv#egg=django-export-csv
+    pip install django-csv-export
 
 
 Usage
